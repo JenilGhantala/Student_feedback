@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Student Management System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary-light: #ffffff;
+            --bg-secondary-light: #f8f9fa;
+            --text-primary-light: #2D336B;
+            --text-secondary-light: #7886C7;
+            --border-light: #e9ecef;
+            --card-bg-light: #ffffff;
+            --shadow-light: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --accent-light: #4361ee;
+
+            --bg-primary-dark: #1a1b1e;
+            --bg-secondary-dark: #2c2d31;
+            --text-primary-dark: #ffffff;
+            --text-secondary-dark: #A9B5DF;
+            --border-dark: #3a3b3f;
+            --card-bg-dark: #2c2d31;
+            --shadow-dark: 0 4px 6px rgba(0, 0, 0, 0.3);
+            --accent-dark: #4895ef;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: var(--bg-primary-light);
+            --bg-secondary: var(--bg-secondary-light);
+            --text-primary: var(--text-primary-light);
+            --text-secondary: var(--text-secondary-light);
+            --border: var(--border-light);
+            --card-bg: var(--card-bg-light);
+            --shadow: var(--shadow-light);
+            --accent: var(--accent-light);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: var(--bg-primary-dark);
+            --bg-secondary: var(--bg-secondary-dark);
+            --text-primary: var(--text-primary-dark);
+            --text-secondary: var(--text-secondary-dark);
+            --border: var(--border-dark);
+            --card-bg: var(--card-bg-dark);
+            --shadow: var(--shadow-dark);
+            --accent: var(--accent-dark);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: var(--card-bg);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: var(--accent);
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .theme-switcher {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .theme-btn {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .theme-btn:hover {
+            background-color: var(--bg-secondary);
+        }
+
+        .theme-btn.active {
+            color: #FFC107;
+        }
+
+        .logout-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            background-color: #ff3b3b;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        nav {
+            background-color: var(--card-bg);
+            padding: 1rem 2rem;
+            position: fixed;
+            width: 100%;
+            top: 72px;
+            z-index: 99;
+            display: flex;
+            gap: 1rem;
+            box-shadow: var(--shadow);
+        }
+
+        .nav-btn {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+
+        .nav-btn:hover,
+        .nav-btn.active {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        main {
+            margin-top: 140px;
+            padding: 2rem;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+            flex: 1;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+        }
+
+        .submit-btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .submit-btn:hover {
+            opacity: 0.9;
+        }
+
+        .file-upload {
+            border: 2px dashed var(--border);
+            padding: 2rem;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-upload:hover {
+            border-color: var(--accent);
+            background-color: var(--bg-secondary);
+        }
+
+        .file-upload input[type="file"] {
+            display: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background-color: var(--bg-secondary);
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background-color: var(--bg-secondary);
+        }
+
+        .action-btn {
+            padding: 0.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 0.5rem;
+        }
+
+        .edit-btn {
+            background-color: #ffc107;
+            color: black;
+        }
+
+        .delete-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        footer {
+            background-color: var(--card-bg);
+            padding: 1rem;
+            text-align: center;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border);
+            margin-top: auto;
+        }
+
+        @media (max-width: 768px) {
+            header, nav {
+                padding: 1rem;
+            }
+
+            .nav-btn {
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+            }
+
+            main {
+                padding: 1rem;
+            }
+
+            .card {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body data-theme="light">
+    <header>
+        <div class="logo">
+            <i class="fas fa-university"></i>
+            Admin Dashboard
+        </div>
+        <div class="header-controls">
+            <div class="theme-switcher">
+                <button class="theme-btn active" onclick="setTheme('light')" title="Light Theme">
+                    <i class="fas fa-sun"></i>
+                </button>
+                <button class="theme-btn" onclick="setTheme('dark')" title="Dark Theme">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+            <button class="logout-btn" onclick="handleLogout()">
+                <i class="fas fa-sign-out-alt"></i>
+                Logout
+            </button>
+        </div>
+    </header>
+
+    <nav>
+        <button class="nav-btn" onclick="showSection('profile')">
+            <i class="fas fa-user-circle"></i>
+            My Profile
+        </button>
+        <button class="nav-btn active" onclick="showSection('students')">
+            <i class="fas fa-user-graduate"></i>
+            Student Management
+        </button>
+        <button class="nav-btn" onclick="showSection('faculty')">
+            <i class="fas fa-chalkboard-teacher"></i>
+            Faculty Management
+        </button>
+    </nav>
+    <main>
+
+        <!-- New Faculty Profile Section -->
+        <section id="profile" class="section">
+            <div class="card">
+                <h2 class="section-title">
+                    <i class="fas fa-id-card"></i>
+                    Faculty Profile
+                </h2>
+                <div class="profile-container" style="display: grid; grid-template-columns: auto 1fr; gap: 2rem; align-items: start;">
+                    <div class="profile-image" style="text-align: center;">
+                        <div style="width: 200px; height: 200px; background-color: var(--bg-secondary); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+                            <i class="fas fa-user" style="font-size: 5rem; color: var(--text-secondary);"></i>
+                        </div>
+                        <button class="submit-btn" style="width: 100%;">
+                            <i class="fas fa-camera"></i>
+                            Update Photo
+                        </button>
+                    </div>
+                    <div class="profile-details">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                            <div class="form-group">
+                                <label class="form-label">Full Name</label>
+                                <input type="text" class="form-input" value="Dr. John Smith" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Employee ID</label>
+                                <input type="text" class="form-input" value="FAC2025001" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Position</label>
+                                <input type="text" class="form-input" value="Associate Professor" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Department</label>
+                                <input type="text" class="form-input" value="Computer Science" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-input" value="john.smith@university.edu" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Contact Number</label>
+                                <input type="tel" class="form-input" value="+1 (555) 123-4567" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Office Location</label>
+                                <input type="text" class="form-input" value="Building A, Room 304" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Office Hours</label>
+                                <input type="text" class="form-input" value="Mon-Wed: 10:00 AM - 12:00 PM" readonly>
+                            </div>
+                        </div>
+                        <div style="margin-top: 2rem;">
+                            <button class="submit-btn">
+                                <i class="fas fa-edit"></i>
+                                Edit Profile
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="section-title">
+                    <i class="fas fa-shield-alt"></i>
+                    Security Settings
+                </h2>
+                <form id="securityForm" onsubmit="handleSecurityUpdate(event)">
+                    <div class="form-group">
+                        <label class="form-label">Current Password</label>
+                        <input type="password" class="form-input" name="currentPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">New Password</label>
+                        <input type="password" class="form-input" name="newPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirm New Password</label>
+                        <input type="password" class="form-input" name="confirmPassword" required>
+                    </div>
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-key"></i>
+                        Update Password
+                    </button>
+                </form>
+            </div>
+        </section>
+        <!-- Student Management Section -->
+        <section id="students" class="section active">
+            <div class="card">
+                <h2 class="section-title">
+                    <i class="fas fa-user-plus"></i>
+                    Add New Student
+                </h2>
+                <form id="studentForm" onsubmit="handleStudentSubmit(event)">
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-input" name="fullname" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Enrollment Number</label>
+                        <input type="text" class="form-input" name="enrollment" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-input" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Department</label>
+                        <input type="text" class="form-input" name="department" required>
+                    </div>
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-save"></i>
+                        Add Student
+                    </button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2 class="section-title">
+                    <i class="fas fa-file-upload"></i>
+                    Bulk Upload Students
+                </h2>
+                <div class="file-upload" onclick="document.getElementById('studentFile').click()">
+                    <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: var(--accent);"></i>
+                    <p style="margin-top: 1rem;">Click to upload CSV/XLSX file</p>
+                    <input type="file" id="studentFile" accept=".csv,.xlsx" onchange="handleFileUpload(event, 'student')">
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="section-title">
+                    <i class="fas fa-list"></i>
+                    Student List
+                </h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Enrollment</th>
+                            <th>Email</th>
+                            <th>Department</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentTableBody">
+                        <!-- Student data will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Faculty Management Section -->
+        <section id="faculty" class="section">
+            <div class="card">
+                <h2 class="section-title">
+                    <i class="fas fa-user-plus"></i>
+                    Add New Faculty
+                </h2>
+                <form id="facultyForm" onsubmit="handleFacultySubmit(event)">
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-input" name="fullname" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Employee ID</label>
+                        <input type="text" class="form-input" name="employeeId" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-input" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Department</label>
+                        <input type="text" class="form-input" name="department" required>
+                    </div>
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-save"></i>
+                        Add Faculty
+                    </button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2 class="section-title">
+                    <i class="fas fa-file-upload"></i>
+                    Bulk Upload Faculty
+                </h2>
+                <div class="file-upload" onclick="document.getElementById('facultyFile').click()">
+                    <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: var(--accent);"></i>
+                    <p style="margin-top: 1rem;">Click to upload CSV/XLSX file</p>
+                    <input type="file" id="facultyFile" accept=".csv,.xlsx" onchange="handleFileUpload(event, 'faculty')">
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 class="section-title">
+                    <i class="fas fa-list"></i>
+                    Faculty List
+                </h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Employee ID</th>
+                            <th>Email</th>
+                            <th>Department</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="facultyTableBody">
+                        <!-- Faculty data will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 University Admin Portal | <a href="#" style="color: var(--accent);">Terms of Service</a> | <a href="#" style="color: var(--accent);">Privacy Policy</a></p>
+    </footer>
+
+    <script>
+        // Theme switching functionality
+        function setTheme(theme) {
+            document.body.setAttribute('data-theme', theme);
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[onclick="setTheme('${theme}')"]`).classList.add('active');
+            localStorage.setItem('preferred-theme', theme);
+        }
+
+        // Navigation functionality
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+            document.querySelector(`[onclick="showSection('${sectionId}')"]`).classList.add('active');
+        }
+
+        // File upload handling
+        async function handleFileUpload(event, type) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                // Here you would typically send the file to your server
+                // For demonstration, we'll just show a success message
+                alert(`${type === 'student' ? 'Student' : 'Faculty'} data file uploaded successfully!`);
+                event.target.value = ''; // Reset file input
+            } catch (error) {
+                console.error('Error uploading file:', error);
+                alert('Error uploading file. Please try again.');
+            }
+        }
+
+        // Form submission handlers
+        async function handleStudentSubmit(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const studentData = Object.fromEntries(formData.entries());
+
+            try {
+                // Here you would typically send the data to your server
+                console.log('Adding student:', studentData);
+                addToTable('studentTableBody', studentData, 'student');
+                event.target.reset();
+                alert('Student added successfully!');
+            } catch (error) {
+                console.error('Error adding student:', error);
+                alert('Error adding student. Please try again.');
+            }
+        }
+
+        async function handleFacultySubmit(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const facultyData = Object.fromEntries(formData.entries());
+
+            try {
+                // Here you would typically send the data to your server
+                console.log('Adding faculty:', facultyData);
+                addToTable('facultyTableBody', facultyData, 'faculty');
+                event.target.reset();
+                alert('Faculty added successfully!');
+            } catch (error) {
+                console.error('Error adding faculty:', error);
+                alert('Error adding faculty. Please try again.');
+            }
+        }
+
+        // Add row to table
+        function addToTable(tableId, data, type) {
+            const tbody = document.getElementById(tableId);
+            const tr = document.createElement('tr');
+            
+            const idField = type === 'student' ? 'enrollment' : 'employeeId';
+            
+            tr.innerHTML = `
+                <td>${data.fullname}</td>
+                <td>${data[idField]}</td>
+                <td>${data.email}</td>
+                <td>${data.department}</td>
+                <td>
+                    <button class="action-btn edit-btn" onclick="handleEdit('${type}', '${data[idField]}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn delete-btn" onclick="handleDelete('${type}', '${data[idField]}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            
+            tbody.appendChild(tr);
+        }
+
+        // Edit and Delete handlers
+        async function handleEdit(type, id) {
+            // Implement edit functionality
+            console.log(`Editing ${type} with ID:`, id);
+            alert('Edit functionality to be implemented');
+        }
+
+        async function handleDelete(type, id) {
+            if (confirm(`Are you sure you want to delete this ${type}?`)) {
+                try {
+                    // Here you would typically send a delete request to your server
+                    console.log(`Deleting ${type} with ID:`, id);
+                    // For demonstration, we'll just remove the row from the table
+                    const row = document.querySelector(`td:contains('${id}')`).parentElement;
+                    row.remove();
+                    alert(`${type} deleted successfully!`);
+                } catch (error) {
+                    console.error(`Error deleting ${type}:`, error);
+                    alert(`Error deleting ${type}. Please try again.`);
+                }
+            }
+        }
+
+        // Firebase Authentication
+        async function handleLogout() {
+            try {
+                // Implement your logout logic here
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Error logging out:', error);
+                alert('Error logging out. Please try again.');
+            }
+        }
+
+        // Initialize theme on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('preferred-theme');
+            if (savedTheme) {
+                setTheme(savedTheme);
+            }
+        });
+
+        // Add this to your existing JavaScript
+        async function handleSecurityUpdate(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const securityData = Object.fromEntries(formData.entries());
+
+            try {
+                // Here you would typically send the data to your server
+                console.log('Updating security settings:', securityData);
+                event.target.reset();
+                alert('Password updated successfully!');
+            } catch (error) {
+                console.error('Error updating password:', error);
+                alert('Error updating password. Please try again.');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Parul University</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-database.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary: #2D336B;
+            --secondary: #7886C7;
+            --accent: #4361ee;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --light: #f8f9fa;
+            --dark: #343a40;
+
+            --bg-primary-light: #ffffff;
+            --bg-secondary-light: #f8f9fa;
+            --text-primary-light: #2D336B;
+            --text-secondary-light: #7886C7;
+            --border-light: #e9ecef;
+
+            --bg-primary-dark: #1a1b1e;
+            --bg-secondary-dark: #2c2d31;
+            --text-primary-dark: #ffffff;
+            --text-secondary-dark: #A9B5DF;
+            --border-dark: #3a3b3f;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: var(--bg-primary-light);
+            --bg-secondary: var(--bg-secondary-light);
+            --text-primary: var(--text-primary-light);
+            --text-secondary: var(--text-secondary-light);
+            --border: var(--border-light);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: var(--bg-primary-dark);
+            --bg-secondary: var(--bg-secondary-dark);
+            --text-primary: var(--text-primary-dark);
+            --text-secondary: var(--text-secondary-dark);
+            --border: var(--border-dark);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            grid-template-rows: auto 1fr auto;
+            grid-template-areas:
+                "sidebar header"
+                "sidebar main"
+                "sidebar footer";
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            grid-area: sidebar;
+            background-color: var(--bg-primary);
+            border-right: 1px solid var(--border);
+            padding: 2rem 1rem;
+            position: fixed;
+            width: 250px;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-logo img {
+            width: 40px;
+            height: 40px;
+        }
+
+        .sidebar-logo span {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .nav-link i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Header Styles */
+        .header {
+            grid-area: header;
+            background-color: var(--bg-primary);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 99;
+        }
+
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            grid-area: main;
+            padding: 2rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background-color: var(--bg-primary);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card-icon {
+            width: 40px;
+            height: 40px;
+            background-color: var(--accent);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .stat-card-value {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Table Styles */
+        .data-table {
+            width: 100%;
+            background-color: var(--bg-primary);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .table-header {
+            background-color: var(--bg-secondary);
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .table-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        th {
+            background-color: var(--bg-secondary);
+            font-weight: 600;
+        }
+
+        /* Form Styles */
+        .form-section {
+            background-color: var(--bg-primary);
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        /* Button Styles */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        /* Footer Styles */
+        .footer {
+            grid-area: footer;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-primary);
+            border-top: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        /* Theme Switcher */
+        .theme-switcher {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .theme-btn {
+            padding: 0.5rem;
+            border: none;
+            background: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .theme-btn:hover {
+            background-color: var(--bg-secondary);
+        }
+
+        .theme-btn.active {
+            color: var(--accent);
+        }
+
+        /* Admin Profile Card */
+        .admin-profile-card {
+            background-color: var(--bg-primary);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .profile-avatar {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .avatar-img {
+            width: 120px;
+            height: 120px;
+            border-radius: 60px;
+            object-fit: cover;
+            border: 4px solid var(--accent);
+        }
+
+        .profile-status {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 3px solid var(--bg-primary);
+        }
+
+        .profile-status.online {
+            background-color: var(--success);
+        }
+
+        .profile-info {
+            flex: 1;
+        }
+
+        .profile-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .profile-title {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .profile-badges {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .badge {
+            background-color: var(--accent);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .profile-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .detail-item {
+            display: grid;
+            grid-template-columns: 24px 1fr;
+            gap: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-secondary);
+            border-radius: 8px;
+            color: var(--text-primary);
+            align-items: center;
+        }
+
+        .detail-item i {
+            color: var(--accent);
+            width: 24px;
+            text-align: center;
+        }
+
+        .detail-item span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            min-width: 0;
+            /* Allows text truncation to work in grid/flex containers */
+        }
+
+        /* Add tooltip on hover for truncated text */
+        .detail-item span:hover {
+            position: relative;
+        }
+
+        .detail-item span:hover::after {
+            content: attr(data-full-text);
+            position: absolute;
+            left: 0;
+            top: 100%;
+            background-color: var(--bg-primary);
+            padding: 0.5rem;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            white-space: normal;
+            max-width: 300px;
+            word-break: break-all;
+        }
+
+        /* Update profile details grid for better space utilization */
+        .profile-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .detail-item {
+                grid-template-columns: 24px 1fr;
+            }
+        }
+
+        /* Notifications Table */
+        .notifications-table .notification-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            color: white;
+        }
+
+        .notifications-table .notification-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            color: var(--text-primary);
+        }
+
+        .notifications-table .notification-content p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: var(--bg-primary);
+            border-radius: 12px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            color: var(--text-primary);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .upload-area {
+            border: 2px dashed var(--border);
+            padding: 2rem;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .upload-area i {
+            font-size: 3rem;
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+
+        .upload-area input[type="file"] {
+            display: none;
+        }
+
+        /* Editable Fields */
+        .editable-field {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .edit-icon {
+            color: var(--accent);
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .editable-field:hover .edit-icon {
+            opacity: 1;
+        }
+
+        .avatar-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .profile-avatar:hover .avatar-overlay {
+            opacity: 1;
+        }
+
+        .save-all-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+        }
+
+        .editing {
+            background-color: var(--bg-secondary);
+            padding: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid var(--accent);
+            color: var(--text-primary);
+        }
+
+        /* Fix for section display */
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                grid-template-columns: 1fr;
+                grid-template-areas:
+                    "header"
+                    "main"
+                    "footer";
+            }
+
+            .sidebar {
+                display: none;
+                z-index: 200;
+            }
+
+            .sidebar.active {
+                display: block;
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .header {
+                padding: 1rem;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .profile-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body data-theme="light">
+    <div class="toast-container" id="toastContainer"></div>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <i class="fas fa-university"></i>
+            <span>Admin Portal</span>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="#dashboard" class="nav-link active" onclick="showSection('dashboard')">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#faculty" class="nav-link" onclick="showSection('faculty')">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    Faculty Management
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#students" class="nav-link" onclick="showSection('students')">
+                    <i class="fas fa-user-graduate"></i>
+                    Student Management
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#feedback" class="nav-link" onclick="showSection('feedback')">
+                    <i class="fas fa-comments"></i>
+                    Feedback Analysis
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#reports" class="nav-link" onclick="showSection('reports')">
+                    <i class="fas fa-chart-bar"></i>
+                    Reports
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- Header -->
+    <header class="header">
+        <h1 class="header-title">Admin Dashboard</h1>
+        <div class="header-controls">
+            <div class="theme-switcher">
+                <button class="theme-btn active" onclick="setTheme('light')" title="Light Theme">
+                    <i class="fas fa-sun"></i>
+                </button>
+                <button class="theme-btn" onclick="setTheme('dark')" title="Dark Theme">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+            <button class="btn btn-danger" onclick="handleLogout()">
+                <i class="fas fa-sign-out-alt"></i>
+                Logout
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="section active">
+            <!-- Profile Image Upload Modal -->
+            <div id="imageUploadModal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Update Profile Picture</h3>
+                        <button onclick="closeImageModal()" class="close-btn">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="upload-area" id="dropArea">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Drag & Drop or Click to Upload</p>
+                            <input type="file" id="profileImageInput" accept="image/*"
+                                onchange="handleImageUpload(this)">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Profile Card with edit buttons -->
+            <div class="admin-profile-card">
+                <div class="profile-header">
+                    <div class="profile-avatar" onclick="openImageModal()">
+                        <img src="/api/placeholder/120/120" alt="Admin Avatar" class="avatar-img">
+                        <div class="profile-status online"></div>
+                        <div class="avatar-overlay">
+                            <i class="fas fa-camera"></i>
+                            <span>Change Photo</span>
+                        </div>
+                    </div>
+                    <div class="profile-info">
+                        <div class="editable-field">
+                            <h2 class="profile-name" id="adminName" onclick="makeEditable(this)">Dr. Rajesh Kumar</h2>
+                            <i class="fas fa-edit edit-icon"></i>
+                        </div>
+                        <div class="editable-field">
+                            <p class="profile-title" id="adminTitle" onclick="makeEditable(this)">Head of Computer
+                                Science Department</p>
+                            <i class="fas fa-edit edit-icon"></i>
+                        </div>
+                        <div class="profile-badges">
+                            <span class="badge"><i class="fas fa-star"></i> Admin</span>
+                            <span class="badge"><i class="fas fa-shield-alt"></i> HOD</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary save-all-btn" onclick="saveAllChanges()" style="display: none;">
+                        <i class="fas fa-save"></i> Save All Changes
+                    </button>
+                </div>
+                <div class="profile-details">
+                    <div class="detail-item editable-field">
+                        <i class="fas fa-envelope"></i>
+                        <span id="adminEmail" onclick="makeEditable(this)">rajesh.kumar@paruluniversity.ac.in</span>
+                        <i class="fas fa-edit edit-icon"></i>
+                    </div>
+                    <div class="detail-item editable-field">
+                        <i class="fas fa-phone"></i>
+                        <span id="adminPhone" onclick="makeEditable(this)">+91 98765 43210</span>
+                        <i class="fas fa-edit edit-icon"></i>
+                    </div>
+                    <div class="detail-item editable-field">
+                        <i class="fas fa-building"></i>
+                        <span id="adminDepartment" onclick="makeEditable(this)">Computer Science Department</span>
+                        <i class="fas fa-edit edit-icon"></i>
+                    </div>
+                    <div class="detail-item editable-field">
+                        <i class="fas fa-book"></i>
+                        <span id="adminSubjects" onclick="makeEditable(this)">Subjects: Data Structures, Algorithm
+                            Analysis</span>
+                        <i class="fas fa-edit edit-icon"></i>
+                    </div>
+                    <div class="detail-item editable-field">
+                        <i class="fas fa-clock"></i>
+                        <span id="adminHours" onclick="makeEditable(this)">Office Hours: 9:00 AM - 5:00 PM</span>
+                        <i class="fas fa-edit edit-icon"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Notifications Table -->
+            <div class="data-table notifications-table">
+                <div class="table-header">
+                    <h2 class="table-title">Recent Notifications</h2>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Message</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <span class="notification-icon" style="background-color: var(--success)">
+                                    <i class="fas fa-user-plus"></i>
+                                </span>
+                            </td>
+                            <td>
+                                <div class="notification-content">
+                                    <strong>New Faculty Added</strong>
+                                    <p>Dr. Sarah Williams has been added to the Computer Science department</p>
+                                </div>
+                            </td>
+                            <td>5 minutes ago</td>
+                            <td><span style="color: var(--success);">Completed</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="notification-icon" style="background-color: var(--warning)">
+                                    <i class="fas fa-file-alt"></i>
+                                </span>
+                            </td>
+                            <td>
+                                <div class="notification-content">
+                                    <strong>Form Submission</strong>
+                                    <p>Annual department review form submitted by Prof. Johnson</p>
+                                </div>
+                            </td>
+                            <td>2 hours ago</td>
+                            <td><span style="color: var(--warning);">Pending Review</span></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="notification-icon" style="background-color: var(--accent)">
+                                    <i class="fas fa-calendar-check"></i>
+                                </span>
+                            </td>
+                            <td>
+                                <div class="notification-content">
+                                    <strong>Schedule Updated</strong>
+                                    <p>Class schedule for BE-CS-3A has been updated</p>
+                                </div>
+                            </td>
+                            <td>1 day ago</td>
+                            <td><span style="color: var(--success);">Completed</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Faculty Management Section -->
+        <section id="faculty" class="section">
+            <div class="form-section">
+                <h2 class="form-title">
+                    <i class="fas fa-file-upload"></i>
+                    Upload Faculty Data
+                </h2>
+                <div
+                    style="border: 2px dashed var(--border); padding: 2rem; text-align: center; border-radius: 8px; margin-bottom: 1rem;">
+                    <i class="fas fa-file-excel"
+                        style="font-size: 3rem; color: var(--accent); margin-bottom: 1rem;"></i>
+                    <p>Drag and drop Excel file here or click to browse</p>
+                    <input type="file" id="faculty-file" accept=".xlsx,.xls" style="display: none;">
+                    <button class="btn btn-primary" onclick="document.getElementById('faculty-file').click()">
+                        Choose File
+                    </button>
+                </div>
+                <button class="btn btn-primary" onclick="uploadFacultyData()">
+                    <i class="fas fa-upload"></i>
+                    Upload Data
+                </button>
+            </div>
+
+            <div class="data-table">
+                <div class="table-header">
+                    <h2 class="table-title">Faculty List</h2>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Department</th>
+                            <th>Subject</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>F001</td>
+                            <td>Dr. John Anderson</td>
+                            <td>Computer Science</td>
+                            <td>Data Structures</td>
+                            <td>
+                                <button class="btn btn-primary" style="padding: 0.5rem;" onclick="editFaculty('F001')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-danger" style="padding: 0.5rem;" onclick="deleteFaculty('F001')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Student Management Section -->
+        <section id="students" class="section">
+            <div class="form-section">
+                <h2 class="form-title">
+                    <i class="fas fa-file-upload"></i>
+                    Upload Student Data
+                </h2>
+                <div
+                    style="border: 2px dashed var(--border); padding: 2rem; text-align: center; border-radius: 8px; margin-bottom: 1rem;">
+                    <i class="fas fa-file-excel"
+                        style="font-size: 3rem; color: var(--accent); margin-bottom: 1rem;"></i>
+                    <p>Drag and drop Excel file here or click to browse</p>
+                    <input type="file" id="student-file" accept=".xlsx,.xls" style="display: none;">
+                    <button class="btn btn-primary" onclick="document.getElementById('student-file').click()">
+                        Choose File
+                    </button>
+                </div>
+                <button class="btn btn-primary" onclick="uploadStudentData()">
+                    <i class="fas fa-upload"></i>
+                    Upload Data
+                </button>
+            </div>
+
+            <div class="data-table">
+                <div class="table-header">
+                    <h2 class="table-title">Student List</h2>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Enrollment No</th>
+                            <th>Name</th>
+                            <th>Class</th>
+                            <th>Department</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2024CS001</td>
+                            <td>Sarah Johnson</td>
+                            <td>BE-CS-3A</td>
+                            <td>Computer Science</td>
+                            <td>
+                                <button class="btn btn-primary" style="padding: 0.5rem;"
+                                    onclick="editStudent('2024CS001')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-danger" style="padding: 0.5rem;"
+                                    onclick="deleteStudent('2024CS001')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>2024CS002</td>
+                            <td>Michael Brown</td>
+                            <td>BE-CS-2B</td>
+                            <td>Computer Science</td>
+                            <td>
+                                <button class="btn btn-primary" style="padding: 0.5rem;"
+                                    onclick="editStudent('2024CS002')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-danger" style="padding: 0.5rem;"
+                                    onclick="deleteStudent('2024CS002')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>2024EC001</td>
+                            <td>Jessica Chen</td>
+                            <td>BE-EC-3A</td>
+                            <td>Electronics</td>
+                            <td>
+                                <button class="btn btn-primary" style="padding: 0.5rem;"
+                                    onclick="editStudent('2024EC001')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-danger" style="padding: 0.5rem;"
+                                    onclick="deleteStudent('2024EC001')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Feedback Analysis Section -->
+        <section id="feedback" class="section">
+            <div class="dashboard-grid">
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <h3>Overall Rating</h3>
+                        <div class="stat-card-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card-value">4.7</div>
+                    <div class="stat-card-label">Average Faculty Rating</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <h3>Responses</h3>
+                        <div class="stat-card-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card-value">742</div>
+                    <div class="stat-card-label">Total Feedback Submissions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <h3>Improvement</h3>
+                        <div class="stat-card-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card-value">+12%</div>
+                    <div class="stat-card-label">From Previous Semester</div>
+                </div>
+            </div>
+
+            <div class="data-table">
+                <div class="table-header">
+                    <h2 class="table-title">Faculty Feedback Summary</h2>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Faculty</th>
+                            <th>Department</th>
+                            <th>Rating</th>
+                            <th>Responses</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Dr. John Anderson</td>
+                            <td>Computer Science</td>
+                            <td>4.8/5.0</td>
+                            <td>142 responses</td>
+                            <td>
+                                <button class="btn btn-primary" style="padding: 0.5rem;"
+                                    onclick="viewFeedbackDetails('F001')">
+                                    <i class="fas fa-eye"></i> View Details
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Dr. Sarah Williams</td>
+                            <td>Computer Science</td>
+                            <td>4.6/5.0</td>
+                            <td>128 responses</td>
+                            <td>
+                                <button class="btn btn-primary" style="padding: 0.5rem;"
+                                    onclick="viewFeedbackDetails('F002')">
+                                    <i class="fas fa-eye"></i> View Details
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Prof. Robert Johnson</td>
+                            <td>Electronics</td>
+                            <td>4.5/5.0</td>
+                            <td>115 responses</td>
+                            <td>
+                                <button class="btn btn-primary" style="padding: 0.5rem;"
+                                    onclick="viewFeedbackDetails('F003')">
+                                    <i class="fas fa-eye"></i> View Details
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Reports Section -->
+        <section id="reports" class="section">
+            <div class="form-section">
+                <h2 class="form-title">Generate Feedback Report</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Report Type</label>
+                        <select class="form-input" id="reportType" disabled>
+                            <option value="feedback" selected>Feedback Report</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Format</label>
+                        <select class="form-input" id="reportFormat">
+                            <option value="pdf">PDF</option>
+                            <option value="excel">Excel</option>
+                            <option value="csv">CSV</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="generateReport()" style="margin-top: 1rem;">
+                    <i class="fas fa-file-download"></i> Generate Feedback Report
+                </button>
+            </div>
+
+            <div class="data-table">
+                <div class="table-header">
+                    <h2 class="table-title">Recent Feedback Reports</h2>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Report Name</th>
+                            <th>Generated Date</th>
+                            <th>Type</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Faculty Feedback Analysis - Feb 2025</td>
+                            <td>Feb 15, 2025</td>
+                            <td>PDF</td>
+                            <td>
+                                <button class="btn btn-primary" style="padding: 0.5rem;"
+                                    onclick="downloadReport('report001')">
+                                    <i class="fas fa-download"></i> Download
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Student Feedback Summary - Jan 2025</td>
+                            <td>Feb 10, 2025</td>
+                            <td>Excel</td>
+                            <td>
+                                <button class="btn btn-primary" style="padding: 0.5rem;"
+                                    onclick="downloadReport('report002')">
+                                    <i class="fas fa-download"></i> Download
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Course Feedback Report - Dec 2024</td>
+                            <td>Feb 5, 2025</td>
+                            <td>PDF</td>
+                            <td>
+                                <button class="btn btn-primary" style="padding: 0.5rem;"
+                                    onclick="downloadReport('report003')">
+                                    <i class="fas fa-download"></i> Download
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2025 Parul University - Admin Dashboard</p>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Theme switcher functionality
+        function setTheme(theme) {
+            document.body.setAttribute('data-theme', theme);
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`.theme-btn[onclick="setTheme('${theme}')"]`).classList.add('active');
+            localStorage.setItem('theme', theme);
+        }
+
+        // Check for saved theme
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            setTheme(savedTheme);
+        }
+
+        // Show section functionality
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            document.querySelector(`[href="#${sectionId}"]`).classList.add('active');
+        }
+
+        // Profile image modal
+        function openImageModal() {
+            document.getElementById('imageUploadModal').style.display = 'flex';
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageUploadModal').style.display = 'none';
+        }
+
+        function handleImageUpload(input) {
+            // Placeholder for image upload functionality
+            closeImageModal();
+            alert('Image uploaded successfully');
+        }
+
+        // Editable fields functionality
+        function makeEditable(element) {
+            if (element.classList.contains('editing')) return;
+
+            const originalText = element.innerText;
+            const inputElement = document.createElement('input');
+            inputElement.value = originalText;
+            inputElement.classList.add('editing');
+
+            element.innerText = '';
+            element.appendChild(inputElement);
+            element.classList.add('editing');
+
+            inputElement.focus();
+
+            document.querySelector('.save-all-btn').style.display = 'block';
+
+            inputElement.addEventListener('blur', function () {
+                saveEdit(element);
+            });
+
+            inputElement.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    saveEdit(element);
+                }
+            });
+        }
+
+        function saveEdit(element) {
+            if (!element.classList.contains('editing')) return;
+
+            const inputElement = element.querySelector('input');
+            const newText = inputElement.value;
+
+            element.innerText = newText;
+            element.classList.remove('editing');
+
+            // Check if any fields are still being edited
+            const editingFields = document.querySelectorAll('.editing');
+            if (editingFields.length === 0) {
+                document.querySelector('.save-all-btn').style.display = 'none';
+            }
+        }
+
+        function saveAllChanges() {
+            document.querySelectorAll('.editable-field .editing').forEach(element => {
+                const parentElement = element.closest('.editable-field');
+                saveEdit(parentElement);
+            });
+
+            alert('All changes saved successfully!');
+            document.querySelector('.save-all-btn').style.display = 'none';
+        }
+
+        // Placeholder functions for CRUD operations
+        function handleLogout() {
+            alert('Logging out...');
+            window.location.href = "login.html";
+        }
+
+        function uploadFacultyData() {
+            alert('Faculty data uploaded successfully!');
+        }
+
+        function uploadStudentData() {
+            alert('Student data uploaded successfully!');
+        }
+
+        function editFaculty(id) {
+            alert('Editing faculty with ID: ' + id);
+        }
+
+        function deleteFaculty(id) {
+            alert('Deleting faculty with ID: ' + id);
+        }
+
+        function editStudent(id) {
+            alert('Editing student with ID: ' + id);
+        }
+
+        function deleteStudent(id) {
+            alert('Deleting student with ID: ' + id);
+        }
+
+        function viewFeedbackDetails(id) {
+            alert('Viewing feedback details for faculty ID: ' + id);
+        }
+
+        function generateReport() {
+            const reportType = document.getElementById('reportType').value;
+            const department = document.getElementById('reportDept').value;
+            alert(`Generating ${reportType} report for ${department}`);
+        }
+
+        function downloadReport(id) {
+            alert('Downloading report: ' + id);
+        }
+    </script>
+    <script>
+        // Enhanced Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCY6krhoYfVqbMwKVMkjs6P8JquoG4krPc",
+  authDomain: "studentvoice-8ef9e.firebaseapp.com",
+  databaseURL: "https://studentvoice-8ef9e-default-rtdb.firebaseio.com",
+  projectId: "studentvoice-8ef9e",
+  storageBucket: "studentvoice-8ef9e.firebasestorage.app",
+  messagingSenderId: "289058312177",
+  appId: "1:289058312177:web:5cfc7e2cb7933cd7c87e50",
+  measurementId: "G-G5YMBK6M3N"
+};
+        // Initialize Firebase with error handling
+        try {
+            firebase.initializeApp(firebaseConfig);
+            const database = firebase.database();
+            console.log("Firebase initialized successfully");
+        } catch (error) {
+            showToast("Error initializing Firebase: " + error.message, "error");
+        }
+
+        // Enhanced toast notification system
+        function showToast(message, type = "info") {
+            const toast = document.createElement("div");
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <i class="fas fa-${type === "success" ? "check-circle" : 
+                              type === "error" ? "exclamation-circle" : 
+                              "info-circle"}"></i>
+                <span>${message}</span>
+            `;
+            
+            const container = document.getElementById("toastContainer");
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = "0";
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Enhanced file handling with validation
+        function handleFileUpload(file, type) {
+            return new Promise((resolve, reject) => {
+                if (!file) {
+                    reject(new Error("No file selected"));
+                    return;
+                }
+
+                const validTypes = [
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    'application/vnd.ms-excel'
+                ];
+
+                if (!validTypes.includes(file.type)) {
+                    reject(new Error("Invalid file type. Please upload an Excel file."));
+                    return;
+                }
+
+                const reader = new FileReader();
+                
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                        resolve(jsonData);
+                    } catch (error) {
+                        reject(new Error("Error processing Excel file: " + error.message));
+                    }
+                };
+
+                reader.onerror = () => reject(new Error("Error reading file"));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        // Enhanced data validation
+        function validateFacultyData(data) {
+            const required = ['name', 'department', 'subject'];
+            const errors = [];
+
+            data.forEach((row, index) => {
+                required.forEach(field => {
+                    if (!row[field]) {
+                        errors.push(`Row ${index + 1}: Missing ${field}`);
+                    }
+                });
+            });
+
+            return errors;
+        }
+
+        // Enhanced error handling
+        function handleError(error) {
+            console.error(error);
+            showToast(error.message, "error");
+        }
+
+        // Initialize functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                initializeDragDrop();
+                loadFacultyData();
+                setupEventListeners();
+            } catch (error) {
+                handleError(error);
+            }
+        });
+
+        // The rest of your existing JavaScript functions with error handling...
+    </script>
+</body>
+
+</html>

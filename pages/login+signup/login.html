@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 400px;
+            transition: all 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #4776E6, #8E54E9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(71, 118, 230, 0.1);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #4776E6;
+            box-shadow: 0 4px 15px rgba(71, 118, 230, 0.1);
+        }
+
+        .role-group {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .role-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .role-option input[type="radio"] {
+            cursor: pointer;
+            width: 1.2rem;
+            height: 1.2rem;
+            accent-color: #4776E6;
+        }
+
+        .role-option label {
+            cursor: pointer;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 2.8rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 1rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #4776E6, #8E54E9);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(71, 118, 230, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(71, 118, 230, 0.3);
+        }
+
+        .auth-links {
+            text-align: center;
+        }
+
+        .auth-links a {
+            color: #4776E6;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .auth-links a:hover {
+            color: #8E54E9;
+            text-decoration: underline;
+        }
+
+        .error-message {
+            display: none;
+            background-color: #fee2e2;
+            color: #dc2626;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1.5rem;
+            }
+
+            h2 {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="login-form">
+            <h2>Welcome Back!</h2>
+            <div id="login-error" class="error-message"></div>
+            <form onsubmit="return handleLogin(event)">
+                <div class="role-group">
+                    <div class="role-option">
+                        <input type="radio" id="login-staff" name="login-role" value="staff" required>
+                        <label for="login-staff">Staff</label>
+                    </div>
+                    <div class="role-option">
+                        <input type="radio" id="login-student" name="login-role" value="student">
+                        <label for="login-student">Student</label>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" name="email" required>
+                </div>
+                <div class="input-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" name="password" required>
+                    <i class="fas fa-eye password-toggle" onclick="togglePassword('login-password')"></i>
+                </div>
+                <div class="buttons">
+                    <button type="submit" class="btn btn-primary">Login</button>
+                </div>
+                <div class="auth-links">
+                    <a href="#" onclick="handleForgotPassword(event)">Forgot Password?</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCY6krhoYfVqbMwKVMkjs6P8JquoG4krPc",
+            authDomain: "studentvoice-8ef9e.firebaseapp.com",
+            projectId: "studentvoice-8ef9e",
+            storageBucket: "studentvoice-8ef9e.firebasestorage.app",
+            messagingSenderId: "289058312177",
+            appId: "1:289058312177:web:5cfc7e2cb7933cd7c87e50",
+            measurementId: "G-G5YMBK6M3N"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        function showError(formId, message) {
+            const errorDiv = document.getElementById(`${formId}-error`);
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const role = document.querySelector('input[name="login-role"]:checked').value;
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            try {
+                // Sign in user
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+
+                // Verify role matches
+                const dbRef = role === 'staff' ? 'admin/' : 'studentdata/';
+                const snapshot = await database.ref(dbRef + user.uid).once('value');
+                const userData = snapshot.val();
+
+                if (!userData || userData.role !== role) {
+                    await auth.signOut();
+                    showError('login', 'Invalid role selected for this account');
+                    return;
+                }
+
+                alert('Logged in successfully!');
+                // Redirect to appropriate dashboard based on role
+                window.location.href = role === 'staff' ? '/pages/admin.html' : '/pages/student.html';
+            } catch (error) {
+                showError('login', error.message);
+            }
+        }
+
+        async function handleForgotPassword(event) {
+            event.preventDefault();
+            const email = document.getElementById('login-email').value;
+
+            if (!email) {
+                showError('login', 'Please enter your email address');
+                return;
+            }
+
+            try {
+                await auth.sendPasswordResetEmail(email);
+                alert('Password reset email sent. Please check your inbox.');
+            } catch (error) {
+                showError('login', error.message);
+            }
+        }
+    </script>
+</body>
+</html>

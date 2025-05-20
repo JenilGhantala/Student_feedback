@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Feedback System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary-light: #ffffff;
+            --bg-secondary-light: #f8f9fa;
+            --text-primary-light: #2D336B;
+            --text-secondary-light: #7886C7;
+            --border-light: #e9ecef;
+            --card-bg-light: #ffffff;
+            --shadow-light: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --accent-light: #4361ee;
+
+            --bg-primary-dark: #1a1b1e;
+            --bg-secondary-dark: #2c2d31;
+            --text-primary-dark: #ffffff;
+            --text-secondary-dark: #A9B5DF;
+            --border-dark: #3a3b3f;
+            --card-bg-dark: #2c2d31;
+            --shadow-dark: 0 4px 6px rgba(0, 0, 0, 0.3);
+            --accent-dark: #4895ef;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: var(--bg-primary-light);
+            --bg-secondary: var(--bg-secondary-light);
+            --text-primary: var(--text-primary-light);
+            --text-secondary: var(--text-secondary-light);
+            --border: var(--border-light);
+            --card-bg: var(--card-bg-light);
+            --shadow: var(--shadow-light);
+            --accent: var(--accent-light);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: var(--bg-primary-dark);
+            --bg-secondary: var(--bg-secondary-dark);
+            --text-primary: var(--text-primary-dark);
+            --text-secondary: var(--text-secondary-dark);
+            --border: var(--border-dark);
+            --card-bg: var(--card-bg-dark);
+            --shadow: var(--shadow-dark);
+            --accent: var(--accent-dark);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: var(--card-bg);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logout-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            background-color: #ff3b3b;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background-color 0.2s;
+        }
+
+        .logout-btn:hover {
+            background-color: #ff1f1f;
+        }
+
+        .logout-btn i {
+            font-size: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: var(--accent);
+        }
+
+        .theme-switcher {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .theme-btn {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .theme-btn:hover {
+            background-color: var(--bg-secondary);
+        }
+
+        .theme-btn.active {
+            color: #FFC107;
+        }
+
+        nav {
+            background-color: var(--card-bg);
+            padding: 1rem 2rem;
+            position: fixed;
+            width: 100%;
+            top: 72px;
+            z-index: 99;
+            display: flex;
+            gap: 1rem;
+            box-shadow: var(--shadow);
+        }
+
+        .nav-btn {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+
+        .nav-btn:hover,
+        .nav-btn.active {
+            background-color: var(--accent);
+            color: white;
+        }
+
+        main {
+            margin-top: 140px;
+            padding: 2rem;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+            flex: 1;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .profile-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .profile-field {
+            background-color: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 8px;
+            transition: transform 0.2s;
+        }
+
+        .profile-field:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+        }
+
+        .field-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .field-value {
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .teacher-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            transition: transform 0.2s;
+        }
+
+        .teacher-card:hover {
+            transform: translateX(5px);
+        }
+
+        .teacher-info {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .teacher-avatar {
+            width: 50px;
+            height: 50px;
+            background-color: var(--accent);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .teacher-name {
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .teacher-subject {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+
+        .feedback-form {
+            display: none;
+            background-color: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            margin-top: 1rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feedback-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .rating-container {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .rating-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .rating-btn:hover {
+            background-color: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .rating-btn.selected {
+            background-color: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 1rem;
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+        }
+
+        .submit-btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .submit-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        .feedback-success {
+            display: none;
+            background-color: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        footer {
+            background-color: var(--card-bg);
+            padding: 1rem;
+            text-align: center;
+            margin-top: auto;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border);
+        }
+
+        @media (max-width: 768px) {
+
+            header,
+            nav {
+                padding: 1rem;
+            }
+
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .teacher-card {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+
+            .teacher-info {
+                flex-direction: column;
+            }
+
+            .rating-container {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body data-theme="light">
+    <header>
+        <div class="logo">
+            <i class="fas fa-university"></i>
+            Parul University
+        </div>
+        <div class="header-controls">
+            <div class="theme-switcher">
+                <button class="theme-btn active" onclick="setTheme('light')" title="Light Theme">
+                    <i class="fas fa-sun"></i>
+                </button>
+                <button class="theme-btn" onclick="setTheme('dark')" title="Dark Theme">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+            <button class="logout-btn" onclick="handleLogout()" title="Logout">
+                <i class="fas fa-sign-out-alt"></i>
+                Logout
+            </button>
+        </div>
+    </header>
+
+    <nav>
+        <button class="nav-btn active" onclick="showSection('profile')">
+            <i class="fas fa-user"></i>
+            Profile
+        </button>
+        <button class="nav-btn" onclick="showSection('feedback')">
+            <i class="fas fa-comments"></i>
+            Feedback
+        </button>
+    </nav>
+
+    <main>
+        <section id="profile" class="section active">
+            <div class="profile-card">
+                <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <i class="fas fa-id-card"></i>
+                        Student Profile
+                    </div>
+                    <button id="editProfileBtn" class="nav-btn" onclick="toggleEditMode()">
+                        <i class="fas fa-edit"></i>
+                        Edit Profile
+                    </button>
+                </div>
+                <div class="profile-grid">
+                    <!-- Personal Information -->
+                    <div class="profile-field">
+                        <div class="field-label">Full Name</div>
+                        <div class="field-value" id="fullname-display"></div>
+                        <input type="text" id="fullname-input" class="form-textarea"
+                            style="display: none; min-height: 40px;">
+                    </div>
+                    <div class="profile-field">
+                        <div class="field-label">Enrollment Number</div>
+                        <div class="field-value" id="enrollment-display"></div>
+                        <input type="text" id="enrollment-input" class="form-textarea"
+                            style="display: none; min-height: 40px;">
+                    </div>
+                    <div class="profile-field">
+                        <div class="field-label">Student Contact</div>
+                        <div class="field-value" id="contact-display"></div>
+                        <input type="tel" id="contact-input" class="form-textarea"
+                            style="display: none; min-height: 40px;">
+                    </div>
+                    <div class="profile-field">
+                        <div class="field-label">Father Contact</div>
+                        <div class="field-value" id="father-contact-display"></div>
+                        <input type="tel" id="father-contact-input" class="form-textarea"
+                            style="display: none; min-height: 40px;">
+                    </div>
+                    <div class="profile-field">
+                        <div class="field-label">Email ID (College)</div>
+                        <div class="field-value" id="college-email-display"></div>
+                    </div>
+                    <div class="profile-field">
+                        <div class="field-label">Email ID (Personal)</div>
+                        <div class="field-value" id="personal-email-display"></div>
+                        <input type="email" id="personal-email-input" class="form-textarea"
+                            style="display: none; min-height: 40px;">
+                    </div>
+
+                    <!-- Academic Information -->
+                    <div class="profile-field">
+                        <div class="field-label">Semester</div>
+                        <div class="field-value" id="semester-display"></div>
+                        <input type="text" id="semester-input" class="form-textarea"
+                            style="display: none; min-height: 40px;">
+                    </div>
+                    <div class="profile-field">
+                        <div class="field-label">Class</div>
+                        <div class="field-value" id="class-display"></div>
+                        <input type="text" id="class-input" class="form-textarea"
+                            style="display: none; min-height: 40px;">
+                    </div>
+                    <div class="profile-field">
+                        <div class="field-label">Division</div>
+                        <div class="field-value" id="division-display"></div>
+                        <input type="text" id="division-input" class="form-textarea"
+                            style="display: none; min-height: 40px;">
+                    </div>
+                    <div class="profile-field">
+                        <div class="field-label">Department</div>
+                        <div class="field-value" id="department-display"></div>
+                        <input type="text" id="department-input" class="form-textarea"
+                            style="display: none; min-height: 40px;">
+                    </div>
+                    <div class="profile-field">
+                        <div class="field-label">Institute</div>
+                        <div class="field-value" id="institute-display"></div>
+                        <input type="text" id="institute-input" class="form-textarea"
+                            style="display: none; min-height: 40px;">
+                    </div>
+                </div>
+            </div>
+            <button id="saveProfileBtn" class="submit-btn" style="display: none;" onclick="saveProfile()">
+                <i class="fas fa-save"></i>
+                Save Changes
+            </button>
+        </section>
+
+        <section id="feedback" class="section">
+            <div class="profile-card">
+                <h2 class="section-title">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    Teacher Feedback
+                </h2>
+                <p style="margin-bottom: 2rem; color: var(--text-secondary);">Your feedback helps us improve teaching
+                    quality. All submissions are anonymous.</p>
+
+                <div class="teacher-card">
+                    <div class="teacher-info">
+                        <div class="teacher-avatar">A</div>
+                        <div>
+                            <div class="teacher-name">Prof. Anderson</div>
+                            <div class="teacher-subject">Advanced Mathematics</div>
+                        </div>
+                    </div>
+                    <button class="nav-btn" onclick="toggleFeedbackForm('anderson')">
+                        <i class="fas fa-pen"></i>
+                        Give Feedback
+                    </button>
+                </div>
+                <div id="anderson-feedback" class="feedback-form">
+                    <h3 class="section-title">Feedback for Prof. Anderson</h3>
+                    <form id="anderson-form" onsubmit="submitFeedback(event, 'anderson')">
+                        <div class="form-group">
+                            <label class="form-label">Teaching Quality</label>
+                            <div class="rating-container" id="anderson-teaching">
+                                <button type="button" class="rating-btn" data-value="1"
+                                    onclick="selectRating('anderson-teaching', 1)">1</button>
+                                <button type="button" class="rating-btn" data-value="2"
+                                    onclick="selectRating('anderson-teaching', 2)">2</button>
+                                <button type="button" class="rating-btn" data-value="3"
+                                    onclick="selectRating('anderson-teaching', 3)">3</button>
+                                <button type="button" class="rating-btn" data-value="4"
+                                    onclick="selectRating('anderson-teaching', 4)">4</button>
+                                <button type="button" class="rating-btn" data-value="5"
+                                    onclick="selectRating('anderson-teaching', 5)">5</button>
+                            </div>
+                            <input type="hidden" name="teachingQuality" id="anderson-teaching-value" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Communication Skills</label>
+                            <div class="rating-container" id="anderson-communication">
+                                <button type="button" class="rating-btn" data-value="1"
+                                    onclick="selectRating('anderson-communication', 1)">1</button>
+                                <button type="button" class="rating-btn" data-value="2"
+                                    onclick="selectRating('anderson-communication', 2)">2</button>
+                                <button type="button" class="rating-btn" data-value="3"
+                                    onclick="selectRating('anderson-communication', 3)">3</button>
+                                <button type="button" class="rating-btn" data-value="4"
+                                    onclick="selectRating('anderson-communication', 4)">4</button>
+                                <button type="button" class="rating-btn" data-value="5"
+                                    onclick="selectRating('anderson-communication', 5)">5</button>
+                            </div>
+                            <input type="hidden" name="communicationSkills" id="anderson-communication-value" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Course Material Quality</label>
+                            <div class="rating-container" id="anderson-material">
+                                <button type="button" class="rating-btn" data-value="1"
+                                    onclick="selectRating('anderson-material', 1)">1</button>
+                                <button type="button" class="rating-btn" data-value="2"
+                                    onclick="selectRating('anderson-material', 2)">2</button>
+                                <button type="button" class="rating-btn" data-value="3"
+                                    onclick="selectRating('anderson-material', 3)">3</button>
+                                <button type="button" class="rating-btn" data-value="4"
+                                    onclick="selectRating('anderson-material', 4)">4</button>
+                                <button type="button" class="rating-btn" data-value="5"
+                                    onclick="selectRating('anderson-material', 5)">5</button>
+                            </div>
+                            <input type="hidden" name="materialQuality" id="anderson-material-value" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Detailed Feedback (strengths and areas for improvement)</label>
+                            <textarea class="form-textarea" name="comments"
+                                placeholder="Please provide specific examples..." required></textarea>
+                        </div>
+                        <button type="submit" class="submit-btn">
+                            <i class="fas fa-paper-plane"></i>
+                            Submit Feedback
+                        </button>
+                    </form>
+                    <div id="anderson-success" class="feedback-success">
+                        <i class="fas fa-check-circle"></i>
+                        Your feedback has been submitted successfully. Thank you for your input!
+                    </div>
+                </div>
+
+                <!-- Similar structure for other teachers -->
+                <!-- Dr. Bennett -->
+                <div class="teacher-card">
+                    <div class="teacher-info">
+                        <div class="teacher-avatar">B</div>
+                        <div>
+                            <div class="teacher-name">Dr. Bennett</div>
+                            <div class="teacher-subject">Data Structures</div>
+                        </div>
+                    </div>
+                    <button class="nav-btn" onclick="toggleFeedbackForm('bennett')">
+                        <i class="fas fa-pen"></i>
+                        Give Feedback
+                    </button>
+                </div>
+                <!-- Bennett's feedback form structure (similar to Anderson's) -->
+
+                <!-- Prof. Carter -->
+                <div class="teacher-card">
+                    <div class="teacher-info">
+                        <div class="teacher-avatar">C</div>
+                        <div>
+                            <div class="teacher-name">Prof. Carter</div>
+                            <div class="teacher-subject">Database Systems</div>
+                        </div>
+                    </div>
+                    <button class="nav-btn" onclick="toggleFeedbackForm('carter')">
+                        <i class="fas fa-pen"></i>
+                        Give Feedback
+                    </button>
+                </div>
+                <!-- Carter's feedback form structure (similar to Anderson's) -->
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 University Student Portal | <a href="#" style="color: var(--accent);">Terms of Service</a> | <a
+                href="#" style="color: var(--accent);">Privacy Policy</a></p>
+    </footer>
+
+    <script>
+        // Theme switching functionality
+        function setTheme(theme) {
+            document.body.setAttribute('data-theme', theme);
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[onclick="setTheme('${theme}')"]`).classList.add('active');
+            localStorage.setItem('preferred-theme', theme);
+        }
+
+        // Navigation functionality
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+            document.querySelector(`[onclick="showSection('${sectionId}')"]`).classList.add('active');
+        }
+
+        // Feedback form toggling
+        function toggleFeedbackForm(teacherId) {
+            const form = document.getElementById(`${teacherId}-feedback`);
+            form.classList.toggle('active');
+            if (form.classList.contains('active')) {
+                form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        // Rating selection
+        function selectRating(groupId, value) {
+            document.querySelectorAll(`#${groupId} .rating-btn`).forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            document.querySelector(`#${groupId} [data-value="${value}"]`).classList.add('selected');
+            document.getElementById(`${groupId}-value`).value = value;
+        }
+
+        // Form submission
+        function submitFeedback(event, teacherId) {
+            event.preventDefault();
+            const form = document.getElementById(`${teacherId}-form`);
+            const formData = {
+                teachingQuality: document.getElementById(`${teacherId}-teaching-value`).value,
+                communicationSkills: document.getElementById(`${teacherId}-communication-value`).value,
+                materialQuality: document.getElementById(`${teacherId}-material-value`).value,
+                comments: form.querySelector('textarea[name="comments"]').value
+            };
+
+            if (!formData.teachingQuality || !formData.communicationSkills ||
+                !formData.materialQuality || !formData.comments) {
+                alert('Please fill out all fields before submitting.');
+                return;
+            }
+
+            console.log(`Feedback for ${teacherId}:`, formData);
+            form.style.display = 'none';
+            document.getElementById(`${teacherId}-success`).style.display = 'block';
+        }
+
+        // Initialize theme on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('preferred-theme');
+            if (savedTheme) {
+                setTheme(savedTheme);
+            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                setTheme('dark');
+            }
+        });
+    </script>
+    <!-- <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCY6krhoYfVqbMwKVMkjs6P8JquoG4krPc",
+            authDomain: "studentvoice-8ef9e.firebaseapp.com",
+            projectId: "studentvoice-8ef9e",
+            storageBucket: "studentvoice-8ef9e.firebasestorage.app",
+            messagingSenderId: "289058312177",
+            appId: "1:289058312177:web:5cfc7e2cb7933cd7c87e50",
+            measurementId: "G-G5YMBK6M3N"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        // Make auth available globally
+        window.auth = auth;
+
+        // Listen for auth state changes
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                loadUserProfile(user.uid);
+            } else {
+                // If no user is signed in, redirect to login page
+                window.location.href = 'login+signup/login.html';
+            }
+        });
+
+        // Logout function
+        window.handleLogout = async () => {
+            try {
+                await signOut(auth);
+                console.log("User signed out successfully");
+                window.location.href = 'login+signup/login.html';
+            } catch (error) {
+                console.error("Error signing out:", error);
+                alert('Error signing out. Please try again.');
+            }
+        };
+
+        // Load user profile data
+        window.loadUserProfile = async (userId) => {
+            const userRef = ref(db, `studentdata/${userId}`);
+            try {
+                const snapshot = await get(userRef);
+                if (snapshot.exists()) {
+                    const userData = snapshot.val();
+
+                    // Personal Information
+                    document.getElementById('fullname-display').textContent = userData.fullname || '';
+                    document.getElementById('enrollment-display').textContent = userData.enrollment || '';
+                    document.getElementById('contact-display').textContent = userData.contact || '';
+                    document.getElementById('father-contact-display').textContent = userData.fatherContact || '';
+                    document.getElementById('college-email-display').textContent = userData.email || '';
+                    document.getElementById('personal-email-display').textContent = userData.personalEmail || '';
+
+                    // Academic Information
+                    document.getElementById('semester-display').textContent = userData.semester || '';
+                    document.getElementById('class-display').textContent = userData.class || '';
+                    document.getElementById('division-display').textContent = userData.division || '';
+                    document.getElementById('department-display').textContent = userData.department || '';
+                    document.getElementById('institute-display').textContent = userData.institute || '';
+
+                    // Set input values
+                    document.getElementById('fullname-input').value = userData.fullname || '';
+                    document.getElementById('enrollment-input').value = userData.enrollment || '';
+                    document.getElementById('contact-input').value = userData.contact || '';
+                    document.getElementById('father-contact-input').value = userData.fatherContact || '';
+                    document.getElementById('personal-email-input').value = userData.personalEmail || '';
+                    document.getElementById('semester-input').value = userData.semester || '';
+                    document.getElementById('class-input').value = userData.class || '';
+                    document.getElementById('division-input').value = userData.division || '';
+                    document.getElementById('department-input').value = userData.department || '';
+                    document.getElementById('institute-input').value = userData.institute || '';
+                }
+            } catch (error) {
+                console.error("Error loading profile:", error);
+            }
+        };
+
+        // Toggle edit mode
+        window.toggleEditMode = () => {
+            const displays = document.querySelectorAll('.field-value');
+            const inputs = document.querySelectorAll('.form-textarea');
+            const saveBtn = document.getElementById('saveProfileBtn');
+            const editBtn = document.getElementById('editProfileBtn');
+
+            displays.forEach(display => {
+                display.style.display = display.style.display === 'none' ? 'block' : 'none';
+            });
+
+            inputs.forEach(input => {
+                input.style.display = input.style.display === 'none' ? 'block' : 'none';
+            });
+
+            saveBtn.style.display = saveBtn.style.display === 'none' ? 'flex' : 'none';
+            editBtn.innerHTML = editBtn.innerHTML.includes('Edit') ?
+                '<i class="fas fa-times"></i> Cancel' :
+                '<i class="fas fa-edit"></i> Edit Profile';
+        };
+
+        // Save profile changes
+        window.saveProfile = async () => {
+            const userId = auth.currentUser?.uid;
+            if (!userId) return;
+
+            const userData = {
+                fullname: document.getElementById('fullname-input').value,
+                enrollment: document.getElementById('enrollment-input').value,
+                contact: document.getElementById('contact-input').value,
+                fatherContact: document.getElementById('father-contact-input').value,
+                email: document.getElementById('college-email-display').textContent,
+                personalEmail: document.getElementById('personal-email-input').value,
+                semester: document.getElementById('semester-input').value,
+                class: document.getElementById('class-input').value,
+                division: document.getElementById('division-input').value,
+                department: document.getElementById('department-input').value,
+                institute: document.getElementById('institute-input').value
+            };
+
+            try {
+                await set(ref(db, `studentdata/${userId}`), userData);
+                toggleEditMode();
+                loadUserProfile(userId);
+                alert('Profile updated successfully!');
+            } catch (error) {
+                console.error("Error saving profile:", error);
+                alert('Error updating profile. Please try again.');
+            }
+        };
+    </script> -->
+</body>
+
+</html>
